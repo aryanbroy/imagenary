@@ -8,16 +8,24 @@ import React, { useEffect, useState } from 'react';
 export default function Home() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchVideos = async () => {
       setLoading(true);
+      setError(null);
       try {
-        const res = await axios.get('/api/videos');
+        const res = await axios.get("/api/videos");
         const data = res.data;
+        if (data.error) {
+          console.log(data.error);
+          setError(data.error || "Failed to fetch videos");
+          return;
+        }
         setVideos(data);
       } catch (error) {
         console.log(error);
+        setError("Failed to fetch videos");
       } finally {
         setLoading(false);
       }
@@ -27,7 +35,7 @@ export default function Home() {
   const onDownload = (url: string, title: string) => {
     const videoUrl = `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload/${url}.mp4`;
 
-    window.open(videoUrl, '_blank');
+    window.open(videoUrl, "_blank");
 
     // const link = document.createElement('a');
     // link.href = videoUrl;
@@ -47,7 +55,9 @@ export default function Home() {
           <span className="loading loading-spinner"></span>
         ) : (
           videos &&
-          videos.map((video) => <VideoCard key={video.id} video={video} onDownload={onDownload} />)
+          videos?.map((video) => (
+            <VideoCard key={video.id} video={video} onDownload={onDownload} />
+          ))
         )}
       </div>
     </div>
